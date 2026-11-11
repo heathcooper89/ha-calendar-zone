@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 GOOGLE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 # Nominatim asks apps to identify themselves with a way to contact the author.
-USER_AGENT = "HomeAssistant-CalendarZone/1.0.1 (+https://github.com/heathcooper89/ha-calendar-zone)"
+USER_AGENT = "HomeAssistant-CalendarZone/1.0.2 (+https://github.com/heathcooper89/ha-calendar-zone)"
 TIMEOUT = aiohttp.ClientTimeout(total=15)
 
 SOURCE_COORDINATES = "coordinates"
