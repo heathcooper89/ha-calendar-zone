@@ -6,8 +6,8 @@ Kept free of Home Assistant imports so it can be unit tested on its own.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Iterable
 
 REASON_ACTIVE = "active"
 REASON_HOLDING = "holding"

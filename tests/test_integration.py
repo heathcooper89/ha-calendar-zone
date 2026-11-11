@@ -379,3 +379,68 @@ async def test_entry_from_earlier_version(
     await hass.async_block_till_done()
     state = hass.states.get("zone.old_zone")
     assert state is not None and state.attributes["friendly_name"] == "Old zone"
+
+
+async def test_attribution_follows_lookup_service(
+    hass: HomeAssistant, calendar, aioclient_mock, freezer
+) -> None:
+    freezer.move_to(local(11, 10))
+    calendar.append(ev("Shift", local(11, 9), local(11, 17), "12 Smith St, Richmond VIC"))
+    aioclient_mock.get(NOMINATIM, json=[{"lat": "-37.81", "lon": "144.99", "display_name": "x"}])
+    await _setup(hass)
+    sensor = hass.states.get("sensor.shift_work_current_event")
+    assert sensor.attributes["attribution"] == "Location data © OpenStreetMap contributors, ODbL"
+
+
+async def test_google_results_expire_after_30_days(
+    hass: HomeAssistant, calendar, aioclient_mock, freezer
+) -> None:
+    tz = dt_util.get_time_zone(TZ)
+    dec2 = datetime(2026, 12, 2, 9, tzinfo=tz)
+    freezer.move_to(local(1, 10))
+    for start in (local(1, 9), local(15, 9), dec2):
+        calendar.append(ev("Shift", start, start + timedelta(hours=8), "1 Main St, Geelong VIC"))
+    aioclient_mock.get(GOOGLE, json={"status": "OK", "results": [{
+        "formatted_address": "1 Main St", "geometry": {"location": {"lat": -38.15, "lng": 144.36}}}]})
+    await _setup(hass, google_api_key="abc123")
+    assert len(aioclient_mock.mock_calls) == 1
+    assert hass.states.get("sensor.shift_work_current_event").attributes["attribution"] == "Location data © Google"
+
+    # Two weeks later the same address is still fresh: no new lookup.
+    freezer.move_to(local(15, 10))
+    await hass.services.async_call(DOMAIN, "refresh", {}, blocking=True)
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # After 30 days Google's coordinates must be looked up again.
+    freezer.move_to(dec2 + timedelta(hours=1))
+    await hass.services.async_call(DOMAIN, "refresh", {}, blocking=True)
+    assert len(aioclient_mock.mock_calls) == 2
+    assert hass.states.get("zone.shift_work").attributes["latitude"] == pytest.approx(-38.15)
+
+
+async def test_api_key_never_logged(
+    hass: HomeAssistant, calendar, aioclient_mock, freezer, caplog
+) -> None:
+    import aiohttp
+
+    freezer.move_to(local(11, 10))
+    calendar.append(ev("Shift", local(11, 9), local(11, 17), "1 Main St, Geelong VIC"))
+    aioclient_mock.get(
+        GOOGLE, exc=aiohttp.ClientError("Invalid URL ...geocode/json?key=secretkey987")
+    )
+    aioclient_mock.get(NOMINATIM, exc=aiohttp.ClientError("connection reset"))
+    await _setup(hass, google_api_key="secretkey987")
+    assert "secretkey987" not in caplog.text
+    assert "**REDACTED**" in caplog.text
+    assert hass.states.get("sensor.shift_work_status").state == "lookup_failed"
+
+
+async def test_malformed_response_is_a_failed_lookup(
+    hass: HomeAssistant, calendar, aioclient_mock, freezer
+) -> None:
+    freezer.move_to(local(11, 10))
+    calendar.append(ev("Shift", local(11, 9), local(11, 17), "12 Smith St, Richmond VIC"))
+    aioclient_mock.get(NOMINATIM, json=[{"unexpected": True}])
+    await _setup(hass)
+    assert hass.states.get("sensor.shift_work_status").state == "lookup_failed"
+    assert hass.states.get("zone.shift_work") is None

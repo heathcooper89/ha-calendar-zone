@@ -62,6 +62,12 @@ class CurrentEventSensor(_Base):
         return (self.manager.event or {}).get("summary")
 
     @property
+    def attribution(self) -> str | None:
+        """Credit the service that found the location, as its licence requires."""
+        pos = self.manager.position
+        return pos.attribution if pos else None
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         m = self.manager
         event = m.event or {}
@@ -84,17 +90,16 @@ class StatusSensor(_Base):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = [
-        "starting",
-        "following",
-        "no_events",
-        "location_not_found",
-        "lookup_failed",
-        "calendar_unavailable",
-    ]
-
     def __init__(self, manager: CalendarZoneManager) -> None:
         super().__init__(manager, "status")
+        self._attr_options = [
+            "starting",
+            "following",
+            "no_events",
+            "location_not_found",
+            "lookup_failed",
+            "calendar_unavailable",
+        ]
 
     @property
     def native_value(self) -> str:

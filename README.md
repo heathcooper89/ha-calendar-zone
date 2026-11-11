@@ -8,15 +8,20 @@ A Home Assistant custom integration that creates a zone which moves to the locat
 
 Built for work locations that change from day to day: put each shift on a calendar with its address and `zone.shift_work` (or whatever you name it) follows along. Zone triggers, "is in zone" conditions, people's location state, the map and Waze Travel Time all work with it like any other zone.
 
-Tested with Home Assistant 2026.2.3 and 2026.10.4. The integration icon shows from Home Assistant 2026.3.
+Tested with Home Assistant 2026.2, 2026.10 and the 2026.12 development version. The integration icon shows from Home Assistant 2026.3.
 
 ## Install
 
-**HACS (recommended):**
+**Marketplace (Home Assistant 2026.11 and newer) or HACS:**
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=heathcooper89&repository=ha-calendar-zone&category=integration)
 
-Or in HACS → ⋮ → Custom repositories, add `https://github.com/heathcooper89/ha-calendar-zone` with type Integration. Download Calendar Zone, then restart Home Assistant.
+Or add it yourself:
+
+- **Home Assistant 2026.11 and newer:** Settings → Marketplace → **Add from link**, and enter `https://github.com/heathcooper89/ha-calendar-zone`.
+- **Older versions with HACS:** HACS → ⋮ → Custom repositories, add `https://github.com/heathcooper89/ha-calendar-zone` with type Integration.
+
+Download Calendar Zone, then restart Home Assistant.
 
 **Manual:** copy `custom_components/calendar_zone` from the [latest release](https://github.com/heathcooper89/ha-calendar-zone/releases) into `/config/custom_components/`, then restart Home Assistant.
 
@@ -59,11 +64,11 @@ In this order:
 2. If the location is empty, coordinates in the event description.
 3. Otherwise the location is treated as an address and looked up with Google (if a key is set) or OpenStreetMap. If Google fails (bad key, quota), OpenStreetMap is tried. If OpenStreetMap can't find "Business name, 12 Smith St, Suburb", it retries once without the business name.
 
-Lookups are cached, so the same address is only looked up once. If an address can't be found, **the zone stays where it was** and the Status sensor shows "Location not found". Tip: full addresses with suburb, state and postcode work best with OpenStreetMap.
+Lookups are cached, so the same address is only looked up once. Google results are looked up again after 30 days, as Google's terms require. If an address can't be found, **the zone stays where it was** and the Status sensor shows "Location not found". Tip: full addresses with suburb, state and postcode work best with OpenStreetMap.
 
 ### Google API key
 
-Create a key in Google Cloud Console with the **Geocoding API** enabled. The key is checked when you save it. Restricting the key to the Geocoding API is a good idea.
+Create a key in Google Cloud Console with the **Geocoding API** enabled. The key is checked when you save it, and it's never written to the logs. Restricting the key to the Geocoding API is a good idea. Google may charge for lookups beyond its free allowance; with caching, a few lookups a day is typical.
 
 ## Entities
 
@@ -92,6 +97,10 @@ actions:
 ```
 
 Waze Travel Time: set the destination to `zone.shift_work`. Waze then gets coordinates rather than an address.
+
+## Data sources
+
+Addresses are looked up with [OpenStreetMap Nominatim](https://nominatim.org/) (data © OpenStreetMap contributors, ODbL) or, if you add a key, the [Google Geocoding API](https://developers.google.com/maps/documentation/geocoding). The Current event sensor's attribution shows which one found the current location. Lookups follow Nominatim's usage policy: at most one request a second, cached, and identified as this integration.
 
 ## Good to know
 

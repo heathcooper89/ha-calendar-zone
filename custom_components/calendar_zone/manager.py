@@ -250,7 +250,11 @@ class CalendarZoneManager:
             "location": ev.location,
         }
 
-        if ev.location == self.location_text and self.position is not None:
+        if (
+            ev.location == self.location_text
+            and self.position is not None
+            and not self.position.expired
+        ):
             self.event = event_info
             self.status = STATUS_FOLLOWING
             self._publish()
@@ -297,12 +301,9 @@ class CalendarZoneManager:
         response = await self.hass.services.async_call(
             "calendar",
             "get_events",
-            {
-                "entity_id": self.calendar,
-                "start_date_time": start,
-                "end_date_time": end,
-            },
+            {"start_date_time": start, "end_date_time": end},
             blocking=True,
+            target={"entity_id": self.calendar},
             return_response=True,
         )
         raw = (response or {}).get(self.calendar, {}).get("events", [])
