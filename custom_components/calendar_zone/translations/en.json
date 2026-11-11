@@ -1,0 +1,99 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Calendar zone",
+        "description": "A zone that moves to the location of the current or next event on a calendar.",
+        "data": {
+          "name": "Zone name",
+          "zone_id": "Zone entity ID",
+          "calendar_entity": "Calendar",
+          "radius": "Radius",
+          "passive": "Passive",
+          "icon": "Icon",
+          "delay_minutes": "Delay before moving to the next event",
+          "title_filter": "Only use events whose title contains",
+          "country_code": "Country to search in",
+          "google_api_key": "Google Maps API key"
+        },
+        "data_description": {
+          "name": "Shown in Home Assistant. You can change it later.",
+          "zone_id": "Optional. Leave blank to base it on the name, for example 'Shift work' becomes zone.shift_work. Automations refer to the zone by this, so it can't be changed later.",
+          "calendar_entity": "Events need a location (an address or coordinates). Events without one are ignored.",
+          "radius": "Zone radius in metres.",
+          "passive": "A passive zone can trigger automations but does not change people's location state.",
+          "delay_minutes": "After an event ends, keep the zone there for this long. If the next event starts sooner, the zone moves halfway through the gap.",
+          "title_filter": "Optional. For example 'work' to ignore other events on the same calendar.",
+          "country_code": "Optional. Limits address lookups to this country.",
+          "google_api_key": "Optional. Uses the Google Geocoding API. Without a key, OpenStreetMap is used."
+        }
+      }
+    },
+    "error": {
+      "zone_exists": "A zone with this entity ID already exists.",
+      "invalid_api_key": "Google rejected the API key. Check that the Geocoding API is enabled for it.",
+      "invalid_zone_id": "Use lowercase letters, numbers and underscores only, for example shift_work."
+    },
+    "abort": {
+      "already_configured": "A calendar zone with this entity ID is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Calendar zone settings",
+        "data": {
+          "name": "Zone name",
+          "calendar_entity": "Calendar",
+          "radius": "Radius",
+          "passive": "Passive",
+          "icon": "Icon",
+          "delay_minutes": "Delay before moving to the next event",
+          "title_filter": "Only use events whose title contains",
+          "country_code": "Country to search in",
+          "google_api_key": "Google Maps API key"
+        },
+        "data_description": {
+          "name": "Shown in Home Assistant, including as people's location when they're in this zone.",
+          "radius": "Zone radius in metres.",
+          "passive": "A passive zone can trigger automations but does not change people's location state.",
+          "delay_minutes": "After an event ends, keep the zone there for this long. If the next event starts sooner, the zone moves halfway through the gap.",
+          "title_filter": "Optional. For example 'work' to ignore other events on the same calendar.",
+          "google_api_key": "Optional. Leave empty to use OpenStreetMap."
+        },
+        "description": "Settings for {entity_id}. The entity ID stays the same if you rename the zone."
+      }
+    },
+    "error": {
+      "invalid_api_key": "Google rejected the API key. Check that the Geocoding API is enabled for it.",
+      "name_required": "Enter a name for the zone."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "event": {
+        "name": "Current event"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "starting": "Starting",
+          "following": "Following calendar",
+          "no_events": "No events with a location",
+          "location_not_found": "Location not found",
+          "lookup_failed": "Lookup service unavailable",
+          "calendar_unavailable": "Calendar unavailable"
+        }
+      },
+      "next_change": {
+        "name": "Next check"
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Refresh",
+      "description": "Re-read the calendar now and move calendar zones if needed."
+    }
+  }
+}

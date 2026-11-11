@@ -1,0 +1,14 @@
+{
+  "domain": "calendar_zone",
+  "name": "Calendar Zone",
+  "after_dependencies": ["calendar", "device_tracker", "person"],
+  "codeowners": ["@heathcooper89"],
+  "config_flow": true,
+  "dependencies": ["zone"],
+  "documentation": "https://github.com/heathcooper89/ha-calendar-zone",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/heathcooper89/ha-calendar-zone/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
